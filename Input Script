@@ -1,0 +1,60 @@
+local Player = game.Players.LocalPlayer
+local Character = Player.Character or Player.CharacterAdded:Wait()
+local Remote = game.ReplicatedStorage.Input
+local MeraRemote = game.ReplicatedStorage.Mera
+local Mouse = Player:GetMouse()
+
+local UIP = game:GetService("UserInputService")
+local BeamDebounce = true
+local BarrageDebounce = true
+local MeraDebounce = true
+
+local KeyHeld = false
+UIP.InputBegan:Connect(function(input,GPE)
+	if not GPE then
+		if input.KeyCode == Enum.KeyCode.C then
+			if MeraDebounce then
+				KeyHeld = true
+				MeraDebounce = false
+				
+				spawn(function()
+					MeraUlt = Character.Humanoid:LoadAnimation(game.ReplicatedStorage.MeraAnimation)
+					MeraUlt:Play()
+					task.wait(30/60)
+					for i = 25,0,-1 do
+						MeraUlt:AdjustSpeed(i/25)
+						task.wait()
+					end
+				end)
+				
+				local Action = "Hold"
+				MeraRemote:FireServer(Action)
+				print(KeyHeld)
+				Player.Character.Humanoid.WalkSpeed = 0
+			end
+		end
+	end
+end)
+
+UIP.InputEnded:Connect(function(input,GPE)
+	if not GPE then
+		if input.KeyCode == Enum.KeyCode.C then
+			if KeyHeld == true and MeraDebounce == false then
+				KeyHeld = false
+				
+				spawn(function()
+					MeraUlt:AdjustSpeed(1.75)
+				end)
+				
+				local Action = "Release"
+				local MousePos = Mouse.Hit
+				MeraRemote:FireServer(Action,MousePos)
+				print(KeyHeld)
+				Player.Character.Humanoid.WalkSpeed = 16
+				
+				task.wait(3)
+				MeraDebounce = true 
+			end
+		end
+	end
+end)

@@ -1,0 +1,151 @@
+local Storage = game.ServerStorage
+local TS = game.TweenService
+
+local Remote = game.ReplicatedStorage.Mera
+Remote.OnServerEvent:Connect(function(Player,Action,MousePos)
+	if Player == game.Players:FindFirstChild(script.Parent.Name) then
+		local HumRP = Player.Character.HumanoidRootPart
+		if Action == "Hold" then
+			Ball = Storage.MeraUlt:Clone()
+			Ball.Size = Vector3.new(0,0,0)
+			Ball.Parent = workspace.ActiveVFX
+			Ball.CFrame = HumRP.CFrame * CFrame.new(0,30,0)
+			
+			Ball.Flame1stSkill:Play()
+			
+			local Tween = TS:Create(Ball,TweenInfo.new(1,Enum.EasingStyle.Linear),{Size = Vector3.new(30,30,30)})
+			Tween:Play()
+			Tween.Completed:Wait()
+			Ball.UltimateReady:Play()
+			Ball["Fire Ball"].Explode:Emit(200)
+			Ball.BALLSEXPLODE:Emit(250)
+			
+		elseif Action == "Release" then
+			Ball.throw:Play()
+			local TweenBall = TS:Create(Ball,TweenInfo.new(1,Enum.EasingStyle.Linear),{Position = MousePos.p})
+			TweenBall:Play()
+			TweenBall.Completed:Wait()
+			
+			local Debris = {}
+			spawn(function()
+				for i = 0,359,30 do
+					local BlockRadius = 32.5
+					local BlockSpacing= 3
+					local Angle = math.rad(i)
+					local X = math.cos(Angle) * BlockRadius
+					local Z = math.sin(Angle) * BlockRadius
+					local Position = Vector3.new(X,0,Z) + MousePos.p
+
+					local Rubble = Instance.new("Part",workspace.ActiveVFX)
+					local ran = math.random(24,26) Rubble.CFrame = CFrame.lookAt(Position,MousePos.p + Vector3.new(0,-ran,0))
+					Rubble.CanCollide = false
+					Rubble.Anchored = true
+					Rubble.Size = Vector3.new(20,6,math.random(10,12))
+
+					local InstancesToIgnore = {Player.Character:GetChildren(), Rubble}
+					local Params = RaycastParams.new()
+					Params.FilterType = Enum.RaycastFilterType.Blacklist
+					Params.IgnoreWater = true
+					Params.FilterDescendantsInstances = InstancesToIgnore
+					local ray = workspace:Raycast(Rubble.CFrame.p+Vector3.new(0,8,0),Vector3.new(0,-10,0),Params)
+					if ray then
+						local Hit = ray.Instance
+						Rubble.Color = Hit.Color
+						Rubble.Material = Hit.Material
+					end
+
+					Rubble.CFrame *= CFrame.new(0,-5,0)
+					local Tween = TS:Create(Rubble,TweenInfo.new(0.2,Enum.EasingStyle.Back),{CFrame = Rubble.CFrame * CFrame.new(0,5,0)})
+					Tween:Play()
+
+					table.insert(Debris,Rubble)
+				end
+				for i = 0,359,45 do
+					local BlockRadius = 45
+					local BlockSpacing= 5
+					local Angle = math.rad(i)
+					local X = math.cos(Angle) * BlockRadius
+					local Z = math.sin(Angle) * BlockRadius
+					local Position = Vector3.new(X,0,Z) + MousePos.p
+
+					local Rubble = Instance.new("Part",workspace.ActiveVFX)
+					local ran = math.random(18,20) Rubble.CFrame = CFrame.lookAt(Position,MousePos.p + Vector3.new(0,-ran,0))
+					Rubble.CanCollide = false
+					Rubble.Anchored = true
+					Rubble.Size = Vector3.new(25,4,math.random(8,10))
+
+					local InstancesToIgnore = {Player.Character:GetChildren(), Rubble}
+					local Params = RaycastParams.new()
+					Params.FilterType = Enum.RaycastFilterType.Blacklist
+					Params.IgnoreWater = true
+					Params.FilterDescendantsInstances = InstancesToIgnore
+					local ray = workspace:Raycast(Rubble.CFrame.p+Vector3.new(0,8,0),Vector3.new(0,-10,0),Params)
+					if ray then
+						local Hit = ray.Instance
+						Rubble.Color = Hit.Color
+						Rubble.Material = Hit.Material
+					end
+
+					Rubble.CFrame *= CFrame.new(0,-5,0)
+					local Tween = TS:Create(Rubble,TweenInfo.new(0.2,Enum.EasingStyle.Back),{CFrame = Rubble.CFrame * CFrame.new(0,5,0)})
+					Tween:Play()
+
+					table.insert(Debris,Rubble)
+				end
+				task.wait(3)
+				for _, v in pairs(Debris) do
+					spawn(function()
+						local Dissapear = TS:Create(v,TweenInfo.new(1,Enum.EasingStyle.Linear),{Position = v.Position - Vector3.new(0,7,0)})
+						Dissapear:Play()
+						Dissapear.Completed:Wait()
+						v:Destroy()
+					end)
+				end
+			end)
+			
+			Ball["Fireball Pass By 2 (SFX)"]:Play()
+			spawn(function()
+				local TweenExplode = TS:Create(Ball,TweenInfo.new(1,Enum.EasingStyle.Quad),{Size = Vector3.new(55,55,55)})
+				TweenExplode:Play()
+				local Crack = game.ServerStorage.Crack:Clone()
+				Crack.Parent = workspace.ActiveVFX
+				Crack.Position = Vector3.new(Ball.Position.X,-0.994,Ball.Position.Z)
+				
+				local ExplodeVFX = game.ServerStorage["Mera Explosion(lof ver)"].Explosion:Clone()
+				ExplodeVFX.Parent = Ball
+				for _, v in pairs(Ball["Fire Ball"]:GetChildren()) do
+					v.Enabled = false
+				end
+				Ball.BALLS.Enabled = false
+				
+				TweenExplode.Completed:Wait()
+				for _, v in pairs(ExplodeVFX:GetChildren()) do
+					v.Enabled = false
+				end
+				
+				local TweenImplode = TS:Create(Ball,TweenInfo.new(0.75,Enum.EasingStyle.Cubic),{Size = Vector3.new(0,0,0)})
+				TweenImplode:Play()
+				TweenImplode.Completed:Wait()
+				
+				local Sparks = game.ServerStorage.MeraSpark.Spark:Clone()
+				Sparks.Parent = Ball
+				Ball["Pyro Fire Ball Burst 5 (SFX)"]:Play()
+				Sparks.Sparks:Emit(10)
+				Sparks.Dots:Emit(15)
+				
+				spawn(function()
+					task.wait(1)
+					for i = 0,100 do
+						Crack["Cracks PNG"].Transparency = i/100
+						task.wait()
+						if i == 100 then
+							Crack:Destroy()
+						elseif i == 25 then
+							Ball:Destroy()
+						end
+					end
+				end)
+			end)
+		end
+	end
+end)
